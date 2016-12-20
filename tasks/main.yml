@@ -4,6 +4,13 @@
     msg: "This playbook is for Ansible version 2"
 
 - block:
+    - name: apt | update cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 86400
+      tags:
+        - locale_apt-update-cache
+        
     - name: ensure tzdata is installed
       apt:
         pkg: tzdata
@@ -15,9 +22,9 @@
       apt:
         name: locales
         state: latest
-        update_cache: true
       tags:
         - locale_install-packages
+      changed_when: false
   when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
 
 - name: ensure tzdata is installed
