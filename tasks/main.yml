@@ -1,0 +1,49 @@
+---
+- assert:
+    that: ansible_version.major == 2
+    msg: "This playbook is for Ansible version 2"
+
+- block:
+    - name: ensure tzdata is installed
+      apt:
+        pkg: tzdata
+        state: present
+      tags:
+        - locale_install-packages
+
+    - name: ensure locales are installed
+      apt:
+        name: locales
+        state: latest
+        update_cache: true
+      tags:
+        - locale_install-packages
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: ensure tzdata is installed
+  yum:
+    pkg: tzdata
+    state: present
+  tags:
+    - locale_install-packages
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+- name: remove localtime symlink
+  file:
+    path: /etc/localtime
+    state: absent
+  changed_when: false
+  tags:
+    - configure_locale
+
+- name: set the correct locale
+  file:
+    src: "/usr/share/zoneinfo/{{ timezone_zone }}"
+    dest: /etc/localtime
+    state: link
+    owner: root
+    group: root
+    mode: 0644
+  changed_when: false
+  tags:
+    - locale_configure-locale
